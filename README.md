@@ -16,3 +16,9 @@ cache.set("b", "bcd");
 console.log(cache.get("a")); // null // expired
 console.log(cache.get("b")); // "bcd"
 ```
+
+## test
+
+```sh
+deno test --allow-import
+```
