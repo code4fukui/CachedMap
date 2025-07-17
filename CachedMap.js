@@ -1,45 +1,59 @@
 export class CachedMap {
-  constructor(lifetimesec = 60 * 60) { // 1hour
+  constructor(maxSize = 1000) {
     this.map = new Map();
-    this.lifetime = lifetimesec * 1000;
-    if (this.lifetime) {
-      this.t = setInterval(() => {
-        this.collectGarbage();
-      }, this.lifetime / 10);
-    }
-  }
-  stopGarbageCollector() {
-    if (this.t) {
-      clearInterval(this.t);
-      this.t = null;
-    }
+    this.maxSize = maxSize;
   }
   get(name) {
     const o = this.map.get(name);
-    if (!o) return null;
-    o.access = new Date().getTime();
+    if (!o) return undefined;
+    o.access = Date.now();
     return o.obj;
   }
   set(name, o) {
-    if (this.has(name)) return this;
-    const t = new Date().getTime();
+    const t = Date.now();
     this.map.set(name, {
       obj: o,
       access: t,
-      create: t,
     });
+    // LRU処理: サイズオーバー時は最も古いものを削除
+    while (this.map.size > this.maxSize) {
+      let maxt = Date.now();
+      let id = null;
+      for (const name of this.map.keys()) {
+        const o = this.map.get(name);
+        if (o.access < maxt) {
+          maxt = o.access;
+          id = name;
+        }
+      }
+      this.map.delete(id);
+    }
+    return this;
   }
   has(name) {
     return this.map.has(name);
   }
-  collectGarbage() {
-    const keys = this.map.keys();
-    const t = new Date().getTime() - this.lifetime;
-    for (const name of keys) {
-      const o = this.map.get(name);
-      if (o.access <= t) {
-        this.map.delete(name);
-      }
+  delete(name) {
+    return this.map.delete(name);
+  }
+  size() {
+    return this.map.size;
+  }
+  clear() {
+    this.map.clear();
+  }
+  keys() {
+    return this.map.keys();
+  }
+  values() {
+    return Array.from(this.map.values()).map(e => e.obj);
+  }
+  entries() {
+    return Array.from(this.map.entries()).map(([k, v]) => [k, v.obj]);
+  }
+  forEach(fn) {
+    for (const [k, v] of this.map.entries()) {
+      fn(v.obj, k, this);
     }
   }
 };

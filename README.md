@@ -1,6 +1,6 @@
 # CacheMap
 
-- Map with cache support
+- Map with size limit for Cache
 
 ## usage
 
@@ -8,15 +8,11 @@
 import { CachedMap } from "https://code4fukui.github.io/CachedMap/CachedMap.js";
 import { sleep } from "https://js.sabae.cc/sleep.js";
 
-const lifetime = 0.1; // lifetime in sec, 0.1 = 100msec
-const cache = new CachedMap(lifetime);
+const maxSize = 1;
+const cache = new CachedMap(maxSize);
 cache.set("a", "abc");
-await sleep(150);
+await sleep(1);
 cache.set("b", "bcd");
-t.assertEquals(cache.get("a"), null); // expired
-t.assertEquals(cache.get("b"), "bcd");
-t.assertEquals(cache.get("c"), null);
-await sleep(150);
-t.assertEquals(cache.get("b"), null); // expired
-cache.stopGarbageCollector();
+console.log(cache.get("a")); // null // expired
+console.log(cache.get("b")); // "bcd"
 ```

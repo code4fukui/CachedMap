@@ -8,18 +8,19 @@ Deno.test("simple", async () => {
   cache.set("b", "bcd");
   t.assertEquals(cache.get("a"), "abc");
   t.assertEquals(cache.get("b"), "bcd");
-  t.assertEquals(cache.get("c"), null);
-  cache.stopGarbageCollector();
+  t.assertEquals(cache.get("c"), undefined);
 });
 Deno.test("gc", async () => {
-  const cache = new CachedMap(0.1); // lifetime = 100msec
+  const cache = new CachedMap(2); // maxSize = 1
   cache.set("a", "abc");
-  await sleep(150);
   cache.set("b", "bcd");
-  t.assertEquals(cache.get("a"), null); // gc
+  cache.set("c", "cde");
+  t.assertEquals(cache.get("a"), undefined); // gc
+  t.assertEquals(cache.get("c"), "cde"); // use c before b
+  await sleep(1);
   t.assertEquals(cache.get("b"), "bcd");
-  t.assertEquals(cache.get("c"), null);
-  await sleep(150);
-  t.assertEquals(cache.get("b"), null); // gc
-  cache.stopGarbageCollector();
+  cache.set("d", "def");
+  t.assertEquals(cache.get("b"), "bcd"); // gc
+  t.assertEquals(cache.get("c"), undefined);
+  t.assertEquals(cache.get("d"), "def");
 });
